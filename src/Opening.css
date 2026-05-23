@@ -442,7 +442,7 @@
     right: 80px;
     width: 80px;
     height: 50px;
-    background-image: url('/src/assets/ribbonImg.png');
+    background-image: url('./assets/ribbonImg.png');
     background-size: cover;
     background-repeat: no-repeat;
     z-index: 10;
@@ -579,7 +579,7 @@
         right: 70px;
         width: 60px;
         height: 50px;
-        background-image: url('/src/assets/ribbonImg.png');
+        background-image: url('./assets/ribbonImg.png');
         background-size: contain;
         background-repeat: no-repeat;
     }

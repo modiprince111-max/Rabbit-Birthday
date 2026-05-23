@@ -1,0 +1,304 @@
+import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
+import png from '../assets/1.png'
+import ballon1 from '../assets/balloon1.png'
+import ballon2 from '../assets/balloon2.png'
+import decorate from '../assets/decorate.png'
+import decoFlowers from '../assets/decorate_flower.png'
+import hat from '../assets/hat.png'
+import smileIcon from '../assets/smiley_icon.png'
+import BookCanvas from "../components/BookCanvas";
+import rabbuOne from "../../Media/Image/Rabbu 1.jpg.jpeg";
+import tumMereSong from "../../Media/Song/Tum Mere Official Video _ Darshan Raval _ Gurpreet S. _ Gautam S. _ Lijo George _ Naushad Khan.mp3";
+
+const HOME_SONG_START_TIME = 15;
+
+const Home = () => {
+    // ------------------- Hooks 
+    const [Active, SetActive] = useState(true)
+    const homeAudioRef = useRef(null)
+
+    useEffect(() => {
+        let datetxt = "30 May";
+        let charArrDate = datetxt.split('');
+        let currentIndex = 0;
+        let date__of__birth = document.querySelector(".date__of__birth span");
+        let typedText = "";
+        let dateTimeoutId;
+        let timeDatetxt;
+        let confettiStartTimeoutId;
+        let confettiRetryTimeoutId;
+        let confettiFrameId;
+        let confettiRunning = true;
+
+        if (!date__of__birth) return;
+
+        dateTimeoutId = setTimeout(function () {
+            timeDatetxt = setInterval(function () {
+                if (currentIndex < charArrDate.length) {
+                    typedText += charArrDate[currentIndex];
+                    date__of__birth.textContent = typedText; // set fresh each time
+                    currentIndex++;
+                } else {
+                    clearInterval(timeDatetxt);
+                    if (!date__of__birth.classList.contains("svg-added")) {
+                        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                        svg.setAttribute("width", "24");
+                        svg.setAttribute("height", "24");
+                        svg.setAttribute("viewBox", "0 0 24 24");
+                        svg.innerHTML = `<path fill="#a31414" d="M18.483 16.767A8.5 8.5 0 0 1 8.118 7.081a1 1 0 0 1-.113.097c-.28.213-.63.292-1.33.45l-.635.144c-2.46.557-3.69.835-3.983 1.776c-.292.94.546 1.921 2.223 3.882l.434.507c.476.557.715.836.822 1.18c.107.345.071.717-.001 1.46l-.066.677c-.253 2.617-.38 3.925.386 4.506s1.918.052 4.22-1.009l.597-.274c.654-.302.981-.452 1.328-.452s.674.15 1.329.452l.595.274c2.303 1.06 3.455 1.59 4.22 1.01c.767-.582.64-1.89.387-4.507z"/> <path fill="#a31414" d="m9.153 5.408l-.328.588c-.36.646-.54.969-.82 1.182q.06-.045.113-.097a8.5 8.5 0 0 0 10.366 9.686l-.02-.19c-.071-.743-.107-1.115 0-1.46c.107-.344.345-.623.822-1.18l.434-.507c1.677-1.96 2.515-2.941 2.222-3.882c-.292-.941-1.522-1.22-3.982-1.776l-.636-.144c-.699-.158-1.049-.237-1.33-.45c-.28-.213-.46-.536-.82-1.182l-.327-.588C13.58 3.136 12.947 2 12 2s-1.58 1.136-2.847 3.408" opacity="0.5"/>`;
+                        let container = document.querySelector(".date__of__birth");
+                        container.prepend(svg);
+                        container.appendChild(svg.cloneNode(true));
+                        date__of__birth.classList.add("svg-added");
+                    }
+                }
+            }, 100);
+        }, 500);
+
+        const makeItRain = () => {
+            if (typeof window.confetti !== "function") {
+                confettiRetryTimeoutId = setTimeout(makeItRain, 200);
+                return;
+            }
+
+            const end = Date.now() + 2500;
+            const colors = ["#bb0000", "#ffffff"];
+
+            const frame = () => {
+                if (!confettiRunning) return;
+
+                window.confetti({
+                    particleCount: 2,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors,
+                });
+
+                window.confetti({
+                    particleCount: 2,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors,
+                });
+
+                if (Date.now() < end) {
+                    confettiFrameId = requestAnimationFrame(frame);
+                }
+            };
+
+            frame();
+        };
+
+        confettiStartTimeoutId = setTimeout(makeItRain, 900);
+
+        return () => {
+            confettiRunning = false;
+            clearTimeout(dateTimeoutId);
+            clearInterval(timeDatetxt);
+            clearTimeout(confettiStartTimeoutId);
+            clearTimeout(confettiRetryTimeoutId);
+            if (confettiFrameId) cancelAnimationFrame(confettiFrameId);
+        };
+    }, []);
+
+    useEffect(() => {
+        const audio = homeAudioRef.current;
+        if (!audio) return;
+        let autoplayRetryId;
+        let stopAutoplayRetryId;
+
+        const startHomeSong = () => {
+            audio.volume = 0.35;
+            if (audio.currentTime < HOME_SONG_START_TIME) {
+                audio.currentTime = HOME_SONG_START_TIME;
+            }
+            audio.play().catch(() => {
+                // Browsers may wait for the first click/tap before allowing audio.
+            });
+        };
+
+        const handleFirstInteraction = () => startHomeSong();
+        const handleLoadedMetadata = () => startHomeSong();
+        const handleCanPlay = () => startHomeSong();
+
+        if (audio.readyState >= 1) {
+            startHomeSong();
+        } else {
+            audio.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
+        }
+
+        audio.addEventListener("canplay", handleCanPlay, { once: true });
+        autoplayRetryId = setInterval(startHomeSong, 500);
+        stopAutoplayRetryId = setTimeout(() => clearInterval(autoplayRetryId), 5000);
+
+        window.addEventListener("pointerdown", handleFirstInteraction, { once: true });
+        window.addEventListener("keydown", handleFirstInteraction, { once: true });
+
+        return () => {
+            audio.pause();
+            clearInterval(autoplayRetryId);
+            clearTimeout(stopAutoplayRetryId);
+            audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+            audio.removeEventListener("canplay", handleCanPlay);
+            window.removeEventListener("pointerdown", handleFirstInteraction);
+            window.removeEventListener("keydown", handleFirstInteraction);
+        };
+    }, []);
+
+    useEffect(() => {
+        const audio = homeAudioRef.current;
+        if (!audio) return;
+
+        if (!Active) {
+            audio.pause();
+            return;
+        }
+
+        if (audio.currentTime < HOME_SONG_START_TIME) {
+            audio.currentTime = HOME_SONG_START_TIME;
+        }
+        audio.play().catch(() => {
+            // Playback will resume on the next user interaction if blocked.
+        });
+    }, [Active]);
+
+
+    return (
+        <>
+            <audio ref={homeAudioRef} src={tumMereSong} preload="auto" autoPlay playsInline loop />
+            <div id="wrapper">
+                <div className="flag__birthday">
+                    <img src={png} alt="" width="350" className="flag__left" />
+                    <img src={png} alt="" width="350" className="flag__right" />
+                </div>
+
+                <div className="content">
+                    <div className="left">
+                        <div className="title">
+                            <h1 className="happy">
+                                <span style={{ "--t": "4s" }}>H</span>
+                                <span style={{ "--t": "4.2s" }}>a</span>
+                                <span style={{ "--t": "4.4s" }}>p</span>
+                                <span style={{ "--t": "4.6s" }}>p</span>
+                                <span style={{ "--t": "4.8s" }}>y</span>
+                            </h1>
+                            <h1 className="birthday">
+                                <span style={{ "--t": "5s" }}>B</span>
+                                <span style={{ "--t": "5.2s" }}>i</span>
+                                <span style={{ "--t": "5.4s" }}>r</span>
+                                <span style={{ "--t": "5.6s" }}>t</span>
+                                <span style={{ "--t": "5.8s" }}>h</span>
+                                <span style={{ "--t": "6s" }}>d</span>
+                                <span style={{ "--t": "6.2s" }}>a</span>
+                                <span style={{ "--t": "6.4s" }}>y</span>
+                            </h1>
+                            <h1 className="birthday-name">
+                                <span style={{ "--t": "6.6s" }}>K</span>
+                                <span style={{ "--t": "6.8s" }}>a</span>
+                                <span style={{ "--t": "7s" }}>s</span>
+                                <span style={{ "--t": "7.2s" }}>h</span>
+                                <span style={{ "--t": "7.4s" }}>i</span>
+                                <span style={{ "--t": "7.6s" }}>s</span>
+                                <span style={{ "--t": "7.8s" }}>h</span>
+                            </h1>
+                            <div className="hat">
+                                <img src={hat} alt="" width="130" />
+                            </div>
+                        </div>
+
+                        <div className="date__of__birth">
+                            <span></span>
+                        </div>
+
+                        <div className="btn flex md:gap-2 md:flex-row flex-col">
+                            <button onClick={() => SetActive(!Active)} id="btn__letter">
+                                <div className="mail flex items-center justify-center gap-2 md:text-[1rem] text-sm">
+                                    <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                        <path fill="#d13852" d="M63.841 18.646c-.246-3.85-1.072-6.977-3.752-10.198c-5.369-6.439-17.71-7.511-23.23-1.312c-.963.912-1.872 2.01-2.785 3.322l-2.066 2.969l-2.067-2.969c-.916-1.312-1.827-2.411-2.79-3.322C21.627.937 9.287 2.008 3.921 8.448C1.237 11.669.412 14.796.166 18.646C-.184 30.092 8.122 39.257 9.147 40.6c5.637 6.613 11.786 12.866 18.03 18.627c1.13.989 2.106 1.812 3.082 2.628c.587.479 1.166.964 1.749 1.44c.582-.477 1.159-.961 1.743-1.44c.98-.816 1.956-1.639 3.082-2.628c6.247-5.761 12.397-12.01 18.04-18.627c1.025-1.343 9.332-10.508 8.979-21.954" />
+                                        <path fill="#f1a5b1" d="M60.39 16.604a10.1 10.1 0 0 0-.457-2.909a9 9 0 0 0-1.169-2.42c-2.973-4.369-9.451-5.943-14.863-4.837c-2.111.508-4.225 1.302-5.197 3.318c-.331.865.365 1.281 1.44 1.228c3.894-.435 8.202-.043 11.645 1.63c.858.42 1.661.918 2.395 1.503c2.47 1.913 3.537 4.887 4.02 7.837c1.201-.242 1.854-1.683 2.01-2.965a10.5 10.5 0 0 0 .177-2.385" />
+                                    </svg>
+                                    Click Here Rabbu
+                                </div>
+                            </button>
+                            <Link to="/gallery" className="gallery__link flex items-center justify-center gap-2 md:text-[1rem] text-sm">
+                                <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M20 5h-3.2l-1.8-2H9L7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-8 12.5A4.5 4.5 0 1 1 12 8a4.5 4.5 0 0 1 0 9.5m0-2A2.5 2.5 0 1 0 12 10a2.5 2.5 0 0 0 0 5.5Z" />
+                                </svg>
+                                Want to view our gallery?
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="right">
+                        <div className="box__account">
+                            <div className="image">
+                                <img src={rabbuOne} alt="" />
+                            </div>
+                            <div className="name">
+                                <i className="fa-solid fa-heart"></i>
+                                <span>Dear Kashish</span>
+                                <i className="fa-solid fa-heart"></i>
+                            </div>
+                            <div className="balloon_one">
+                                <img width="100px" src={ballon1} alt="" />
+                            </div>
+                            <div className="balloon_two">
+                                <img width="100px" src={ballon2} alt="" />
+                            </div>
+                        </div>
+
+                        <div className="cricle">
+                            <div className="text__cricle">
+                                {["h", "a", "p", "p", "y", "-", "b", "i", "r", "t", "h", "d", "a", "y", "-"].map(
+                                    (char, i) => (
+                                        <span key={i} style={{ "--i": i + 1 }}>
+                                            {char}
+                                        </span>
+                                    )
+                                )}
+                            </div>
+                            <i className="fa-solid fa-heart"></i>
+                        </div>
+                    </div>
+                </div>
+
+                {[1, 2, 3, 4, 5].map((n, i) => (
+                    <div key={i} className={`decorate_star star${n}`} style={{ "--t": `${15 + i * 0.2}s` }}></div>
+                ))}
+
+                <div className="decorate_flower--one" style={{ "--t": "15s" }}>
+                    <img width="20" src={decoFlowers} alt="" />
+                </div>
+                <div className="decorate_flower--two" style={{ "--t": "15.3s" }}>
+                    <img width="20" src={decoFlowers} alt="" />
+                </div>
+                <div className="decorate_flower--three" style={{ "--t": "15.6s" }}>
+                    <img width="20" src={decoFlowers} alt="" />
+                </div>
+
+                <div className="decorate_bottom">
+                    <img src={decorate} alt="" width="100" />
+                </div>
+
+                <div className="smiley__icon">
+                    <img src={smileIcon} alt="" width="100" />
+                </div>
+
+
+
+
+
+
+                {/* =========================== BoxMail Canvas =============================== */}
+                <BookCanvas active={Active} setActive={SetActive} />
+
+            </div>
+        </>
+    );
+};
+
+export default Home;

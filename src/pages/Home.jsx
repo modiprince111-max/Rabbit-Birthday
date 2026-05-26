@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import png from '../assets/1.png'
 import ballon1 from '../assets/balloon1.png'
@@ -7,34 +7,106 @@ import decorate from '../assets/decorate.png'
 import decoFlowers from '../assets/decorate_flower.png'
 import hat from '../assets/hat.png'
 import smileIcon from '../assets/smiley_icon.png'
-import BookCanvas from "../components/BookCanvas";
 import rabbuOne from "../../Media/Image/Rabbu 1.jpg.jpeg";
 import tumMereSong from "../../Media/Song/Tum Mere Official Video _ Darshan Raval _ Gurpreet S. _ Gautam S. _ Lijo George _ Naushad Khan.mp3";
 
 const HOME_SONG_START_TIME = 15;
+const HOME_SONG_VOLUME = 0.35;
 const INTRO_COUNTDOWN_SECONDS = 11;
+const INTRO_STORAGE_KEY = "rabbitBirthdayIntroSeen";
+const BookCanvas = lazy(() => import("../components/BookCanvas"));
+
+const hasSeenIntro = () => {
+    try {
+        return window.sessionStorage.getItem(INTRO_STORAGE_KEY) === "true";
+    } catch {
+        return false;
+    }
+};
+
+const markIntroSeen = () => {
+    try {
+        window.sessionStorage.setItem(INTRO_STORAGE_KEY, "true");
+    } catch {
+        // Storage can be unavailable in private browser modes.
+    }
+};
 
 const Home = () => {
     // ------------------- Hooks 
     const [Active, SetActive] = useState(true)
-    const [introCountdown, setIntroCountdown] = useState(INTRO_COUNTDOWN_SECONDS)
-    const [showIntro, setShowIntro] = useState(true)
+    const introWasSeenAtMount = useRef(hasSeenIntro())
+    const [introCountdown, setIntroCountdown] = useState(() => introWasSeenAtMount.current ? 0 : INTRO_COUNTDOWN_SECONDS)
+    const [showIntro, setShowIntro] = useState(() => !introWasSeenAtMount.current)
+    const [letterHasOpened, setLetterHasOpened] = useState(false)
     const homeAudioRef = useRef(null)
+    const homeSongStartedRef = useRef(false)
+
+    const seekHomeSongStart = (audio) => {
+        if (!audio || audio.readyState < 1) return false;
+
+        try {
+            audio.currentTime = HOME_SONG_START_TIME;
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const handleOpenLetter = () => {
+        setLetterHasOpened(true);
+        SetActive(false);
+    };
 
     useEffect(() => {
+        if (!showIntro) return;
+
+        const audio = homeAudioRef.current;
+        const warmUpHomeSong = () => {
+            if (!audio) return;
+
+            audio.muted = true;
+            audio.volume = 0;
+            seekHomeSongStart(audio);
+            audio.play().catch(() => {
+                // If muted autoplay is blocked, the first tap/keypress retries it.
+            });
+        };
+        const handleMetadata = () => warmUpHomeSong();
+        const handleFirstInteraction = () => warmUpHomeSong();
+
+        warmUpHomeSong();
+        audio?.addEventListener("loadedmetadata", handleMetadata, { once: true });
+        window.addEventListener("pointerdown", handleFirstInteraction, { once: true });
+        window.addEventListener("keydown", handleFirstInteraction, { once: true });
+
         const countdownTimer = setInterval(() => {
             setIntroCountdown((currentCount) => Math.max(currentCount - 1, 0));
         }, 1000);
 
         const hideIntroTimer = setTimeout(() => {
+            markIntroSeen();
             setShowIntro(false);
         }, INTRO_COUNTDOWN_SECONDS * 1000);
 
         return () => {
+            audio?.removeEventListener("loadedmetadata", handleMetadata);
+            window.removeEventListener("pointerdown", handleFirstInteraction);
+            window.removeEventListener("keydown", handleFirstInteraction);
             clearInterval(countdownTimer);
             clearTimeout(hideIntroTimer);
         };
-    }, []);
+    }, [showIntro]);
+
+    useEffect(() => {
+        if (showIntro) return;
+
+        const preloadLetter = setTimeout(() => {
+            import("../components/BookCanvas");
+        }, 1200);
+
+        return () => clearTimeout(preloadLetter);
+    }, [showIntro]);
 
     useEffect(() => {
         if (showIntro) return;
@@ -48,7 +120,8 @@ const Home = () => {
         let timeDatetxt;
         let confettiStartTimeoutId;
         let confettiRetryTimeoutId;
-        let confettiFrameId;
+        let confettiIntervalId;
+        let confettiStopTimeoutId;
         let confettiRunning = true;
 
         if (!date__of__birth) return;
@@ -86,11 +159,11 @@ const Home = () => {
             const end = Date.now() + 2500;
             const colors = ["#bb0000", "#ffffff"];
 
-            const frame = () => {
+            const burst = () => {
                 if (!confettiRunning) return;
 
                 window.confetti({
-                    particleCount: 2,
+                    particleCount: 3,
                     angle: 60,
                     spread: 55,
                     origin: { x: 0 },
@@ -98,19 +171,17 @@ const Home = () => {
                 });
 
                 window.confetti({
-                    particleCount: 2,
+                    particleCount: 3,
                     angle: 120,
                     spread: 55,
                     origin: { x: 1 },
                     colors,
                 });
-
-                if (Date.now() < end) {
-                    confettiFrameId = requestAnimationFrame(frame);
-                }
             };
 
-            frame();
+            burst();
+            confettiIntervalId = setInterval(burst, 140);
+            confettiStopTimeoutId = setTimeout(() => clearInterval(confettiIntervalId), end - Date.now());
         };
 
         confettiStartTimeoutId = setTimeout(makeItRain, 900);
@@ -121,7 +192,8 @@ const Home = () => {
             clearInterval(timeDatetxt);
             clearTimeout(confettiStartTimeoutId);
             clearTimeout(confettiRetryTimeoutId);
-            if (confettiFrameId) cancelAnimationFrame(confettiFrameId);
+            clearTimeout(confettiStopTimeoutId);
+            clearInterval(confettiIntervalId);
         };
     }, [showIntro]);
 
@@ -132,29 +204,43 @@ const Home = () => {
         let autoplayRetryId;
         let stopAutoplayRetryId;
 
-        const startHomeSong = () => {
-            audio.volume = 0.35;
-            if (audio.currentTime < HOME_SONG_START_TIME) {
-                audio.currentTime = HOME_SONG_START_TIME;
+        if (!Active) {
+            audio.pause();
+            return;
+        }
+
+        const startHomeSong = (restart = false) => {
+            audio.muted = false;
+            audio.volume = HOME_SONG_VOLUME;
+            const shouldRestart = restart && !homeSongStartedRef.current;
+
+            if (shouldRestart || audio.currentTime < HOME_SONG_START_TIME) {
+                if (!seekHomeSongStart(audio)) {
+                    audio.addEventListener("loadedmetadata", () => seekHomeSongStart(audio), { once: true });
+                }
             }
-            audio.play().catch(() => {
+
+            audio.play().then(() => {
+                homeSongStartedRef.current = true;
+            }).catch(() => {
                 // Browsers may wait for the first click/tap before allowing audio.
             });
         };
 
-        const handleFirstInteraction = () => startHomeSong();
-        const handleLoadedMetadata = () => startHomeSong();
-        const handleCanPlay = () => startHomeSong();
+        const shouldRestartAtIntroEnd = !homeSongStartedRef.current;
+        const handleFirstInteraction = () => startHomeSong(shouldRestartAtIntroEnd);
+        const handleLoadedMetadata = () => startHomeSong(shouldRestartAtIntroEnd);
+        const handleCanPlay = () => startHomeSong(shouldRestartAtIntroEnd);
 
         if (audio.readyState >= 1) {
-            startHomeSong();
+            startHomeSong(shouldRestartAtIntroEnd);
         } else {
             audio.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
         }
 
         audio.addEventListener("canplay", handleCanPlay, { once: true });
-        autoplayRetryId = setInterval(startHomeSong, 500);
-        stopAutoplayRetryId = setTimeout(() => clearInterval(autoplayRetryId), 5000);
+        autoplayRetryId = setInterval(() => startHomeSong(shouldRestartAtIntroEnd), 700);
+        stopAutoplayRetryId = setTimeout(() => clearInterval(autoplayRetryId), 6500);
 
         window.addEventListener("pointerdown", handleFirstInteraction, { once: true });
         window.addEventListener("keydown", handleFirstInteraction, { once: true });
@@ -168,29 +254,12 @@ const Home = () => {
             window.removeEventListener("pointerdown", handleFirstInteraction);
             window.removeEventListener("keydown", handleFirstInteraction);
         };
-    }, [showIntro]);
-
-    useEffect(() => {
-        const audio = homeAudioRef.current;
-        if (!audio) return;
-
-        if (!Active || showIntro) {
-            audio.pause();
-            return;
-        }
-
-        if (audio.currentTime < HOME_SONG_START_TIME) {
-            audio.currentTime = HOME_SONG_START_TIME;
-        }
-        audio.play().catch(() => {
-            // Playback will resume on the next user interaction if blocked.
-        });
     }, [Active, showIntro]);
 
 
     return (
         <>
-            <audio ref={homeAudioRef} src={tumMereSong} preload="auto" autoPlay playsInline loop />
+            <audio ref={homeAudioRef} src={tumMereSong} preload="auto" playsInline loop />
             {showIntro && (
                 <section className="rabbit-countdown" aria-live="polite">
                     <div className="rabbit-countdown__panel">
@@ -248,7 +317,7 @@ const Home = () => {
                         </div>
 
                         <div className="btn flex md:gap-2 md:flex-row flex-col">
-                            <button onClick={() => SetActive(!Active)} id="btn__letter">
+                            <button onClick={handleOpenLetter} id="btn__letter">
                                 <div className="mail flex items-center justify-center gap-2 md:text-[1rem] text-sm">
                                     <svg className="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
                                         <path fill="#d13852" d="M63.841 18.646c-.246-3.85-1.072-6.977-3.752-10.198c-5.369-6.439-17.71-7.511-23.23-1.312c-.963.912-1.872 2.01-2.785 3.322l-2.066 2.969l-2.067-2.969c-.916-1.312-1.827-2.411-2.79-3.322C21.627.937 9.287 2.008 3.921 8.448C1.237 11.669.412 14.796.166 18.646C-.184 30.092 8.122 39.257 9.147 40.6c5.637 6.613 11.786 12.866 18.03 18.627c1.13.989 2.106 1.812 3.082 2.628c.587.479 1.166.964 1.749 1.44c.582-.477 1.159-.961 1.743-1.44c.98-.816 1.956-1.639 3.082-2.628c6.247-5.761 12.397-12.01 18.04-18.627c1.025-1.343 9.332-10.508 8.979-21.954" />
@@ -327,7 +396,11 @@ const Home = () => {
 
 
                 {/* =========================== BoxMail Canvas =============================== */}
-                <BookCanvas active={Active} setActive={SetActive} />
+                {letterHasOpened && (
+                    <Suspense fallback={null}>
+                        <BookCanvas active={Active} setActive={SetActive} />
+                    </Suspense>
+                )}
 
             </div>
             )}

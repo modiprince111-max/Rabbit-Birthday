@@ -37,6 +37,8 @@ const Home = () => {
     }, []);
 
     useEffect(() => {
+        if (showIntro) return;
+
         let datetxt = "30 May";
         let charArrDate = datetxt.split('');
         let currentIndex = 0;
@@ -121,7 +123,7 @@ const Home = () => {
             clearTimeout(confettiRetryTimeoutId);
             if (confettiFrameId) cancelAnimationFrame(confettiFrameId);
         };
-    }, []);
+    }, [showIntro]);
 
     useEffect(() => {
         const audio = homeAudioRef.current;
@@ -200,6 +202,7 @@ const Home = () => {
                     </div>
                 </section>
             )}
+            {!showIntro && (
             <div id="wrapper">
                 <div className="flag__birthday">
                     <img src={png} alt="" width="350" className="flag__left" />
@@ -327,6 +330,7 @@ const Home = () => {
                 <BookCanvas active={Active} setActive={SetActive} />
 
             </div>
+            )}
         </>
     );
 };

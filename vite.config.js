@@ -6,6 +6,13 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Rabbit-Birthday/',
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[hash][extname]',
+      },
+    },
+  },
   resolve: {
     dedupe: ['react', 'react-dom'],
     alias: {

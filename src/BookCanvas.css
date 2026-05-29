@@ -30,11 +30,11 @@
 
 .boxMail .boxMail-container {
     position: absolute;
-    width: 750px;
-    height: 500px;
+    width: 850px;
+    height: 560px;
     display: flex;
     margin: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
     -webkit-perspective: 2000px;
     perspective: 2000px;
 }
@@ -45,7 +45,7 @@
 }
 
 .boxMail .boxMail-container:hover .card1 {
-    transform: translate(-187px, -250px) rotateY(-140deg);
+    transform: translate(-50%, -50%) rotateY(-140deg);
 }
 
 .boxMail .boxMail-container .card1,
@@ -387,7 +387,7 @@
     /* Cleaned up the confusing padding: centered and top/bottom space */
     padding: 0 0 10px 0;
     text-align: center;
-    font-size: 34px;
+    font-size: 36px;
     /* Big, friendly heading */
     margin-bottom: 15px;
     text-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
@@ -402,7 +402,7 @@
 .boxMail .boxMail-container .card2 .card2-message-text {
     font-family: "Sriracha", "cursive";
     padding: 10px 0;
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1.6;
     flex-grow: 1;
     overflow-y: auto;
@@ -703,8 +703,8 @@
 @media screen and (max-width: 658px) {
     .boxMail .boxMail-container {
         position: absolute;
-        width: 650px;
-        height: 500px;
+        width: 700px;
+        height: 540px;
         display: flex;
         margin: 0;
         transform: scale(0.9);
@@ -718,7 +718,7 @@
     }
 
     .boxMail .boxMail-container:hover .card1 {
-        transform: translate(-160px, -250px) rotateY(-140deg);
+        transform: translate(-50%, -50%) rotateY(-140deg);
     }
 
     .boxMail .boxMail-container .card2 h3 {
@@ -730,7 +730,7 @@
     .boxMail .boxMail-container .card2 .card2-message-text {
         font-family: "Sriracha", "cursive";
         padding: 10px 0;
-        font-size: 16px;
+        font-size: 17px;
         line-height: 1.6;
         flex-grow: 1;
         overflow-y: auto;

@@ -35,8 +35,6 @@ const birthdayMessageBeforeLyrics = [
     "I wish your future self looks back one day and feels proud of the person you became.",
     "And most importantly…",
     "I wish you never lose this version of yourself — because your heart is genuinely rare.",
-    "Also yes, I still pray for the brave soul who has to handle your mood swings forever. May God give them strength in advance 🫡",
-    "(and if it’s me then wow, what a dangerous lifetime subscription 😭)",
     "And before ending this mini novel —",
     "I just want you to know something very honestly:",
     "No matter how much we tease each other or act unserious… you hold a very special place in my life.",
